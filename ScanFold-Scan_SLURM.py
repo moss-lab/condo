@@ -34,7 +34,7 @@ import string
 #import argparse
 import re
 import numpy as np
-sys.path.append('/home/randrews/ViennaRNA/lib/python/site-packages/')
+sys.path.append('/home/randrews/ViennaRNA/lib/python3.6/site-packages/')
 sys.path.append('/usr/local/lib/python3.6/site-packages')
 import RNA
 import random
