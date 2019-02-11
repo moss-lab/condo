@@ -434,6 +434,15 @@ def write_bp(base_pair_dictionary, filename):
         else:
             print("2 Error at:", k)
 
+def write_wig_dict(nucleotide_dictionary, outputfilename, name):
+
+    w = open(outputfilename, 'w')
+    #write wig file header
+    w.write("%s %s %s %s %s\n" % ("fixedStep", "chrom="+name, "start=0", "step=1", "span=1"))
+
+    #write values of zscores
+    for k, v in nucleotide_dictionary.items():
+        w.write("%f\n" % (v.zscore))
 
 def transcribe(seq):
     #Function to covert T nucleotides to U nucleotides
@@ -1032,5 +1041,5 @@ if competition == 1:
     # os.system(str("ct2dot "+output+"below_mean_"+str(round(meanz, 2))+".ct 1 "+output+"below_mean_"+str(round(meanz, 2))+".dbn"))
     # os.system(str("ct2dot "+output+"1sd_below_mean_"+str(round(one_sig_below, 2))+".ct 1 "+output+"1sd_below_mean_"+str(round(one_sig_below, 2))+".dbn"))
     # os.system(str("ct2dot "+output+"2sd_below_mean_"+str(round(two_sig_below, 2))+".ct 1 "+output+"2sd_below_mean_"+str(round(two_sig_below, 2))+".dbn"))
-    write_bp(final_partners, filename+".-2.bp")
-    # print("ScanFold-Fold complete, find results in...")
+    write_bp(final_partners, filename+".IGVoutput.bp")
+    write_wig_dict(final_partners, filename+".IGVoutput.wig", )
