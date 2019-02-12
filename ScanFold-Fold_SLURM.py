@@ -44,6 +44,7 @@ import argparse
 from itertools import repeat
 from functools import partial
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+import gc
 
 start_time = time.time()
 
@@ -470,6 +471,7 @@ with open(filename, 'r') as f:
 
     #Generate nucleotide dictionary to assign each nucleotide in sequence a key
     nuc_dict = NucleotideDictionary(lines)
+    gc.collect()
     print("Sequence length: "+str(len(nuc_dict))+"nt")
 
     #Determine start and end coordinate values
