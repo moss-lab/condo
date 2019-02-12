@@ -512,7 +512,7 @@ with open(filename, 'r') as f:
                 strand = 1
                 #print("Tab "+icoordinate)
             except:
-                data = row.split(',')
+                data = row.split(',, \t')
                 icoordinate = data[0]
                 jcoordinate = data[1]
                 temp = data[2]
