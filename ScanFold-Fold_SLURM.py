@@ -128,13 +128,13 @@ def NucleotideDictionary (lines):
 
 
                 #print(sequence_raw)
-                if strand == -1:
-                    #print("NegStrand")
-                    sequence = sequence_raw[::-1]
-                    #print(sequence)
-                else:
-                    #print("PosStrand")
-                    sequence = sequence_raw
+                # if strand == -1:
+                #     #print("NegStrand")
+                #     sequence = sequence_raw[::-1]
+                #     #print(sequence)
+                # else:
+                #     #print("PosStrand")
+                #     sequence = sequence_raw
 
             for nuc in sequence:
                 #print(nuc)
