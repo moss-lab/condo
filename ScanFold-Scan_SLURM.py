@@ -335,7 +335,7 @@ with open(myfasta, 'r') as forward_fasta:
                     frag = frag.transcribe()
                     if frag == "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN":
                         MFE = int(0.0)
-                        zscore = "#DIV/0"
+                        zscore = "0.0"
                         ED = int(0.0)
                         pscore = int(0.0)
                         structure = "........................................................................................................................"

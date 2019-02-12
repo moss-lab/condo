@@ -674,6 +674,7 @@ with open(filename, 'r') as f:
                     w.append(z)
                 l += 2
 
+            print(icoordinate)
             gc.collect()
 
         #Define OVERALL values of metrics
