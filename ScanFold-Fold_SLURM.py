@@ -54,11 +54,14 @@ parser.add_argument('-f', type=int, default=-2,
                     help='filter value')
 parser.add_argument('-c', type=int, default=1,
                     help='Competition')
+parser.add_argument('-name', type=str, default="UserInput",
+                    help='Sequence Name/ID')
 
 args = parser.parse_args()
 filename = args.input
 filter = int(args.f)
 competition = int(args.c)
+name = str(args.name)
 
 log_total = open(str(filename)+".ScanFold.log.txt", 'w')
 log_win = open(str(filename)+".ScanFold.final_partners.txt", 'w')
@@ -377,7 +380,7 @@ def write_dp(base_pair_dictionary, filename, filter):
             else:
                 print("Error at:", k)
 
-def write_bp(base_pair_dictionary, filename):
+def write_bp(base_pair_dictionary, filename, name):
     w = open(filename, 'w')
         #set color for bp file (igv format)
     w.write("%s\t%d\t%d\t%d\t%s\n" % (str("color:"), 55, 129, 255, str("Less than -2 "+str(minz))))
@@ -426,11 +429,11 @@ def write_bp(base_pair_dictionary, filename):
 
         if int(v.icoordinate) < int(v.jcoordinate):
             #w.write("%d\t%d\t%f\n" % (k, int(v.jcoordinate), float(-(math.log10(probability)))))
-            w.write("%s\t%d\t%d\t%d\t%d\t%s\n" % ("KJ776791.2", int(v.icoordinate), int(v.icoordinate), int(v.jcoordinate), int(v.jcoordinate), score))
+            w.write("%s\t%d\t%d\t%d\t%d\t%s\n" % (name, int(v.icoordinate), int(v.icoordinate), int(v.jcoordinate), int(v.jcoordinate), score))
         elif int(v.icoordinate) > int(v.jcoordinate):
-            w.write("%s\t%d\t%d\t%d\t%d\t%s\n" % ("KJ776791.2", int(v.icoordinate), int(v.icoordinate), int(v.jcoordinate), int(v.jcoordinate), score))
+            w.write("%s\t%d\t%d\t%d\t%d\t%s\n" % (name, int(v.icoordinate), int(v.icoordinate), int(v.jcoordinate), int(v.jcoordinate), score))
         elif int(v.icoordinate) == int(v.jcoordinate):
-            w.write("%s\t%d\t%d\t%d\t%d\t%s\n" % ("KJ776791.2", k, k, int(v.jcoordinate), int(v.jcoordinate), score))
+            w.write("%s\t%d\t%d\t%d\t%d\t%s\n" % (name, k, k, int(v.jcoordinate), int(v.jcoordinate), score))
         else:
             print("2 Error at:", k)
 
@@ -840,37 +843,41 @@ if competition == 1:
     #     print(jcoordinate)
     #     j_coord_list.append(int(v.jcoordinate))
 
+    #create sub-dictionaries so we don't test for competition throuh whole seq
     for k, v in sorted(best_bps.items()):
-        #print(k, v.icoordinate, v.jcoordinate)
+        print(k, v.icoordinate, v.jcoordinate)
         test_k = int(k)
-        #print(sum(test_k == int(v.jcoordinate) for v in best_bps.values()))
+        print(sum(test_k == int(v.jcoordinate) for v in best_bps.values()))
+
         if sum(test_k == int(v.jcoordinate) for v in best_bps.values()) >= 0:
-            keys = range(int(start_coordinate), int(end_coordinate))
+            #keys = range(int(start_coordinate), int(end_coordinate))
+            # print(str(length)+" * "+str(end_coordinate)+" - "+str(start_coordinate)+" +1")
             # if (length) * 4 < int(int(end_coordinate) - int(start_coordinate) + 1):
+            #
             #     keys = range(int(start_coordinate), int(end_coordinate))
 
-            # elif (
-            #     (v.icoordinate - length*(2)) >= int(start_coordinate) and
-            #     (v.icoordinate + (length*2)) <= int(end_coordinate)
-            #     ):
-            #     #print(str(v.icoordinate - length*(2)))
-            #     #print("1-")
-            #     keys = range(int(v.icoordinate-(length*2)), int(v.icoordinate+(length*2)))
-            #
-            # elif int(v.icoordinate + (length*(2))) <= int(end_coordinate):
-            #     #print("2-"+str(v.icoordinate - (length*(2)))+" "+str(end_coordinate))
-            #     keys = range(int(start_coordinate), int(v.icoordinate+(length*2))+1)
-            #
-            # elif (v.icoordinate + (length*2)) >= int(end_coordinate):
-            #     if v.icoordinate-(length*2) > 0:
-            #         #print("3-"+str(v.icoordinate + (length*2)))
-            #         keys = range(int(v.icoordinate-(length*2)), int(end_coordinate)+1)
-            #     else:
-            #         keys =range(int(start_coordinate), int(end_coordinate))
+            if (
+                (v.icoordinate - length*(2)) >= int(start_coordinate) and
+                (v.icoordinate + (length*2)) <= int(end_coordinate)
+                ):
+                print(str(v.icoordinate - length*(2)))
+                print("1-")
+                keys = range(int(v.icoordinate-(length*2)), int(v.icoordinate+(length*2)))
 
-            # else:
-            #     #print("Sub-dictionary error")
-            #     raise ValueError("Sub-dictionary error")
+            elif int(v.icoordinate + (length*(2))) <= int(end_coordinate):
+                print("2-"+str(v.icoordinate - (length*(2)))+" "+str(end_coordinate))
+                keys = range(int(start_coordinate), int(v.icoordinate+(length*2))+1)
+
+            elif (v.icoordinate + (length*2)) >= int(end_coordinate):
+                if v.icoordinate-(length*2) > 0:
+                    print("3-"+str(v.icoordinate + (length*2)))
+                    keys = range(int(v.icoordinate-(length*2)), int(end_coordinate)+1)
+                else:
+                    keys =range(int(start_coordinate), int(end_coordinate))
+
+            else:
+                print("Sub-dictionary error")
+                raise ValueError("Sub-dictionary error")
 
             subdict = {k: best_total_window_mean_bps[k] for k in keys}
             # if k == 216:
@@ -990,7 +997,7 @@ if competition == 1:
                                         best_bps[k].zscore,
                                         best_bps[k].mfe,
                                         best_bps[k].ed)
-            #print("No competing pair found for ", k)
+            print("No competing pair found for ", k)
             continue
 
 
@@ -1008,7 +1015,7 @@ if competition == 0:
     print("ScanFold-Fold complete, find results in...")
 
     #Write bp files
-    write_bp(best_bps, "best_bps_test.bp")
+    write_bp(best_bps, "best_bps_test.bp", name)
 
 
 #Write CT files
@@ -1041,5 +1048,5 @@ if competition == 1:
     # os.system(str("ct2dot "+output+"below_mean_"+str(round(meanz, 2))+".ct 1 "+output+"below_mean_"+str(round(meanz, 2))+".dbn"))
     # os.system(str("ct2dot "+output+"1sd_below_mean_"+str(round(one_sig_below, 2))+".ct 1 "+output+"1sd_below_mean_"+str(round(one_sig_below, 2))+".dbn"))
     # os.system(str("ct2dot "+output+"2sd_below_mean_"+str(round(two_sig_below, 2))+".ct 1 "+output+"2sd_below_mean_"+str(round(two_sig_below, 2))+".dbn"))
-    write_bp(final_partners, filename+".IGVoutput.bp")
-    write_wig_dict(final_partners, filename+".IGVoutput.wig", )
+    write_bp(final_partners, filename+".IGVoutput.bp", name)
+    write_wig_dict(final_partners, filename+".IGVoutput.wig", name)
