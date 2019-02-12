@@ -51,6 +51,7 @@ window_size = int(sys.argv[3])
 randomizations = int(sys.argv[4])
 temperature = int(sys.argv[5])
 type = str(sys.argv[6])
+strand = str(sys.argv[7])
 w = open(myfasta+".step_win_rand."+str(step_size)+"_"+str(window_size)+"_"+str(randomizations)+".txt", 'w')
 #s = open("result_summary.forward."+myfasta+".win_"+str(window_size)+".stp_"+str(step_size)+".rnd_"+str(randomizations)+".shfl_"+str(type)+".txt", 'w')
 #s.write("ReadName\tLength\tMeanMFE\tMeanZ\tMeanP\tMeanED\n")
@@ -314,7 +315,11 @@ with open(myfasta, 'r') as forward_fasta:
             i = 0
             while i == 0 or i <= (length - window_size):
                 start_nucleotide = i + 1 # This will just define the start nucleotide coordinate value
-                frag = seq[i:i+int(window_size)] # This breaks up sequence into fragments
+                raw_frag = seq[i:i+int(window_size)] # This breaks up sequence into fragments
+                if strand == "reverse":
+                    frag = reverse_complement(raw_frag)
+                if strand == "forward":
+                    frag = raw_frag
                 #print(frag)
                 #print(str(len(frag)))
                 start_nucleotide = i + 1
