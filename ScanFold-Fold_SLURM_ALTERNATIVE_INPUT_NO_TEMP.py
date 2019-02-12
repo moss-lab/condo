@@ -516,19 +516,22 @@ with open(filename, 'r') as f:
                 jcoordinate = data[1]
                 #temp = data[2]
                 mfe = float(data[2])
-                zscore = float(data[3])
+                try:
+                    zscore = float(data[3])
+                except:
+                    zscore = float(0000)
                 pvalue = data[4]
                 ed = float(data[5])
                 if ("A" or "G" or "C" or "T" or "U") in str(data[7]):
                     #print("8"+str(data[8]))
                     fmfe = float(data[7])
-                    sequence_raw = transcribe(str(data[8]))
-                    structure_raw = str(data[9])
+                    sequence_raw = transcribe(str(data[7]))
+                    structure_raw = str(data[8])
 
                 elif ("A" or "G" or "C" or "T" or "U") in str(data[6]):
                     #print("7")
-                    sequence_raw = transcribe(str(data[7]))
-                    structure_raw = str(data[8])
+                    sequence_raw = transcribe(str(data[6]))
+                    structure_raw = str(data[7])
 
                 strand = 1
                 #print("Tab "+icoordinate)
