@@ -200,11 +200,11 @@ def dinuclShuffle(s):
   t = "".join(L)
   return t
 
-#### Defining my functions #####
-def reverse_complement(dna):
-    complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
-    return ''.join([complement[base] for base in dna[::-1]])
-
+# #### Defining my functions #####
+# def reverse_complement(dna):
+#     complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
+#     return ''.join([complement[base] for base in dna[::-1]])
+#
 
 ###### Function to calculate ZScore on list of MFEs #################
 def pscore_function(energy_list, randomizations):
@@ -317,7 +317,7 @@ with open(myfasta, 'r') as forward_fasta:
                 start_nucleotide = i + 1 # This will just define the start nucleotide coordinate value
                 raw_frag = seq[i:i+int(window_size)] # This breaks up sequence into fragments
                 if strand == "reverse":
-                    frag = reverse_complement(raw_frag)
+                    frag = raw_frag.reverse_complement()
                 if strand == "forward":
                     frag = raw_frag
                 #print(frag)
