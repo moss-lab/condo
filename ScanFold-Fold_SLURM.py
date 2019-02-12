@@ -861,19 +861,22 @@ if competition == 1:
                 (v.icoordinate + (length*2)) <= int(end_coordinate)
                 ):
                 print(str(v.icoordinate - length*(2)))
-                print("1-")
+                print("MIDDLE")
                 keys = range(int(v.icoordinate-(length*2)), int(v.icoordinate+(length*2)))
 
-            elif int(v.icoordinate + (length*(2))) <= int(end_coordinate):
-                print("2-"+str(v.icoordinate - (length*(2)))+" "+str(end_coordinate))
+            elif (
+                int(v.icoordinate + (length*(2))) <= int(end_coordinate)and
+                (v.icoordinate + (length*2)) <= int(end_coordinate)
+            ):
+                print("BEGINING"+str(v.icoordinate - (length*(2)))+" "+str(end_coordinate))
                 keys = range(int(start_coordinate), int(v.icoordinate+(length*2))+1)
 
             elif (v.icoordinate + (length*2)) >= int(end_coordinate):
                 if v.icoordinate-(length*2) > 0:
-                    print("3-"+str(v.icoordinate + (length*2)))
+                    print("END"+str(v.icoordinate + (length*2)))
                     keys = range(int(v.icoordinate-(length*2)), int(end_coordinate)+1)
                 else:
-                    keys =range(int(start_coordinate), int(end_coordinate))
+                    keys =range(int(v.icoordinate-(length*2)), int(end_coordinate))
 
             else:
                 print("Sub-dictionary error")
