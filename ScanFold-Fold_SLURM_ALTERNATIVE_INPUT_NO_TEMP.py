@@ -135,6 +135,27 @@ def NucleotideDictionary (lines):
                 else:
                     #print("PosStrand")
                     sequence = sequence_raw
+            except:
+                data = row.split('\t')
+                strand = 1
+                #print(strand)
+                icoordinate = data[0]
+                if "A" or "G" or "C" or "T" or "U" in str(data[7]):
+                    sequence_raw = transcribe(str(data[7]))
+                elif "A" or "G" or "C" or "T" or "U" in str(data[6]):
+                    sequence_raw = transcribe(str(data[6]))
+                else:
+                    raise("Could not find sequence for window")
+
+
+                #print(sequence_raw)
+                if strand == -1:
+                    #print("NegStrand")
+                    sequence = sequence_raw[::-1]
+                    #print(sequence)
+                else:
+                    #print("PosStrand")
+                    sequence = sequence_raw
 
             for nuc in sequence:
                 #print(nuc)
