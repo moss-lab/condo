@@ -116,8 +116,8 @@ def NucleotideDictionary (lines):
 
             except:
                 print("Exception at "+str(row))
-                data = row.split(',')
-                strand = int(data[11])
+                data = row.split(',', '\t')
+                #strand = int(data[11])
                 #print(strand)
                 icoordinate = data[0]
                 if "A" or "G" or "C" or "T" or "U" in str(data[8]):
