@@ -57,7 +57,7 @@ parser.add_argument('-c', type=int, default=1,
                     help='Competition')
 parser.add_argument('-name', type=str, default="UserInput",
                     help='Sequence Name/ID')
-parser.add_argument('-stand', type=str, default="forward",
+parser.add_argument('-strand', type=str, default="forward",
                     help='strand')
 
 args = parser.parse_args()
@@ -673,7 +673,7 @@ with open(filename, 'r') as f:
                     w = bp_dict[rbp_coord]
                     w.append(z)
                 l += 2
-                
+
             gc.collect()
 
         #Define OVERALL values of metrics
