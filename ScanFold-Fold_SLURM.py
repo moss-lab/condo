@@ -115,6 +115,7 @@ def NucleotideDictionary (lines):
                     raise("Could not find sequence for window")
 
             except:
+                print("Exception at "+str(row))
                 data = row.split(',')
                 strand = int(data[11])
                 #print(strand)
