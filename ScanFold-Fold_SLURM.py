@@ -113,10 +113,10 @@ def NucleotideDictionary (lines):
                     #print("7")
                     sequence = transcribe(str(data[7]))
                 else:
-                    raise("Could not find sequence for window")
+                    print("Exception at "+str(row))
 
             except:
-                print("Exception at "+str(row))
+
                 data = row.split(',', '\t')
                 #strand = int(data[11])
                 #print(strand)
