@@ -57,12 +57,20 @@ parser.add_argument('-c', type=int, default=1,
                     help='Competition')
 parser.add_argument('-name', type=str, default="UserInput",
                     help='Sequence Name/ID')
+parser.add_argument('-stand', type=str, default="forward",
+                    help='strand')
 
 args = parser.parse_args()
+strand = str(parser.strand)
 filename = args.input
 filter = int(args.f)
 competition = int(args.c)
 name = str(args.name)
+
+if strand == "forward":
+    strand = int(1)
+if strand == "reverse":
+    strand = int(-1)
 
 log_total = open(str(filename)+".ScanFold.log.txt", 'w')
 log_win = open(str(filename)+".ScanFold.final_partners.txt", 'w')
@@ -117,7 +125,7 @@ def NucleotideDictionary (lines):
 
             except:
 
-                data = row.split(',', '\t')
+                data = row.split(',')
                 #strand = int(data[11])
                 #print(strand)
                 icoordinate = data[0]
@@ -496,7 +504,7 @@ with open(filename, 'r') as f:
 
                 icoordinate = data[0]
                 jcoordinate = data[1]
-                temp = data[2]
+                # temp = data[2]
                 mfe = float(data[3])
                 zscore = float(data[4])
                 pvalue = data[5]
@@ -515,7 +523,8 @@ with open(filename, 'r') as f:
                 strand = 1
                 #print("Tab "+icoordinate)
             except:
-                data = row.split(',, \t')
+                print("Exception at "+str(row))
+                data = row.split(',')
                 icoordinate = data[0]
                 jcoordinate = data[1]
                 temp = data[2]
@@ -526,7 +535,10 @@ with open(filename, 'r') as f:
                 fmfe = data[7]
                 sequence_raw = transcribe(str(data[8]))
                 structure_raw = str(data[9])
-                strand = int(data[11])
+                try:
+                    strand = int(data[11])
+                except:
+                    strand = 1
                 if strand == -1:
                     #print(icoordinate)
                     sequence_forward = sequence_raw
@@ -661,6 +673,8 @@ with open(filename, 'r') as f:
                     w = bp_dict[rbp_coord]
                     w.append(z)
                 l += 2
+                
+            gc.collect()
 
         #Define OVERALL values of metrics
         meanz = float(np.mean(z_score_list))
