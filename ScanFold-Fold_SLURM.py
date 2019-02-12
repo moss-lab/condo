@@ -61,7 +61,7 @@ parser.add_argument('-strand', type=str, default="forward",
                     help='strand')
 
 args = parser.parse_args()
-strand = str(parser.strand)
+strand = str(args.strand)
 filename = args.input
 filter = int(args.f)
 competition = int(args.c)
