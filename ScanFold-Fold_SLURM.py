@@ -43,7 +43,7 @@ import time
 import argparse
 from itertools import repeat
 from functools import partial
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+import concurrent.futures
 import gc
 
 start_time = time.time()
@@ -468,6 +468,188 @@ def flip_structure(structure):
     flip = {'(':')', ')':'(', '.':'.'}
     return ''.join([flip[pair] for pair in structure[::-1]])
 
+def read_row(row):
+
+    #Main loop to find all i-j pairs per i-nucleotide
+    #Assign metrics to variables
+    try:
+        data = row.split('\t')
+
+        icoordinate = data[0]
+        jcoordinate = data[1]
+        # temp = data[2]
+        mfe = float(data[3])
+        zscore = float(data[4])
+        pvalue = data[5]
+        ed = float(data[6])
+        if ("A" or "G" or "C" or "T" or "U") in str(data[8]):
+            #print("8"+str(data[8]))
+            fmfe = float(data[7])
+            sequence_raw = transcribe(str(data[8]))
+            structure_raw = str(data[9])
+
+        elif ("A" or "G" or "C" or "T" or "U") in str(data[7]):
+            #print("7")
+            sequence_raw = transcribe(str(data[7]))
+            structure_raw = str(data[8])
+
+        strand = 1
+        #print("Tab "+icoordinate)
+    except:
+        print("Exception at "+str(row))
+        data = row.split(',')
+        icoordinate = data[0]
+        jcoordinate = data[1]
+        temp = data[2]
+        mfe = float(data[3])
+        zscore = float(data[4])
+        pvalue = data[5]
+        ed = float(data[6])
+        fmfe = data[7]
+        sequence_raw = transcribe(str(data[8]))
+        structure_raw = str(data[9])
+        try:
+            strand = int(data[11])
+        except:
+            strand = 1
+        if strand == -1:
+            #print(icoordinate)
+            sequence_forward = sequence_raw
+            sequence_reverse = sequence_forward[::-1]
+            structure_forward = structure_raw
+            #print(structure_forward)
+            structure_reverse = flip_structure(structure_forward)
+            #print(structure_reverse)
+            # print(sequence_raw)
+            # print(sequence_reverse)
+            structure_raw = structure_reverse
+            sequence_raw = sequence_reverse
+            icoordinate = data[0]
+            jcoordinate = data[1]
+        if strand == int(1):
+            icoordinate = data[0]
+            jcoordinate = data[1]
+
+        #print("Comma "+icoordinate)
+
+    #Convert sequence and structures into lists
+    sequence = list(sequence_raw)
+    structure = list(structure_raw)
+
+    #Define window coordinates as string
+    #window = str(str(icoordinate)+"-"+str(jcoordinate))
+
+    #Determine length of window
+    length = len(sequence)
+
+    #Append window z-score to list (to calculate overall z-score)
+    z_score_list.append(zscore)
+
+    #Iterate through dot bracket structure to determine locations of bps
+    i = 0
+    while i < length:
+        #Unpaired nucleotide
+        if structure[i] == '.':
+            nucleotide = sequence[i]
+            coordinate = (i + int(icoordinate))
+            x = NucPair(nucleotide, coordinate, nucleotide, coordinate,
+                        zscore, mfe, ed)
+            try:
+                y = bp_dict[coordinate]
+                y.append(x)
+            except:
+                bp_dict[coordinate] = []
+                y = bp_dict[coordinate]
+                y.append(x)
+            i += 1
+        #Paired nucleotide
+        else:
+            i += 1
+
+    #Inititate base pair tabulation variables
+    bond_order = []
+    bond_count = 0
+
+    #Iterate through sequence to assign nucleotides to structure type
+    m = 0
+    while  m < length:
+        if structure[m] == '(':
+            bond_count += 1
+            bond_order.append(bond_count)
+            m += 1
+        elif structure[m] == ')':
+            bond_order.append(bond_count)
+            bond_count -= 1
+            m += 1
+        elif structure[m] == '.':
+            bond_order.append(0)
+            m += 1
+        else:
+            print("Error")
+
+    #Initiate base_pair list
+    base_pairs = []
+
+    #Create empty variable named test
+    test = ""
+
+    #Iterate through bond order
+    j = 0
+    while j < len(bond_order):
+        if bond_order[j] != 0:
+            test = bond_order[j]
+            base_pairs.append(j+1)
+            bond_order[j] = 0
+            j += 1
+            k = 0
+            while k < len(bond_order):
+                if bond_order[k] == test:
+                    base_pairs.append(k+1)
+                    bond_order[k] = 0
+                    k += 1
+                else:
+                    k += 1
+        else:
+            j += 1
+
+    #Iterate through "base_pairs" "to define bps
+    l = 0
+    while l < len(base_pairs):
+        lbp = base_pairs[l]
+        rbp = base_pairs[l+1]
+
+        lb = str(sequence[int(lbp)-1])
+        rb = str(sequence[int(rbp)-1])
+
+        lbp_coord = int(int(lbp)+int(icoordinate)-1)
+        rbp_coord = int(int(rbp)+int(icoordinate)-1)
+        x = NucPair(lb, lbp_coord, rb, rbp_coord, zscore, mfe, ed)
+        z = NucPair(rb, rbp_coord, lb, lbp_coord, zscore, mfe, ed)
+
+        #Try to append i-j pair to i-nuc for left i-nuc
+        try:
+            y = bp_dict[lbp_coord]
+            y.append(x)
+        #If i-nuc not defined, define it
+        except:
+            bp_dict[lbp_coord] = []
+            y = bp_dict[lbp_coord]
+            y.append(x)
+
+        #Try to append i-j pair to i-nuc for right i-nuc
+        try:
+            w = bp_dict[rbp_coord]
+            w.append(z)
+        #If i-nuc not defined, define it
+        except:
+            bp_dict[rbp_coord] = []
+            w = bp_dict[rbp_coord]
+            w.append(z)
+        l += 2
+
+    #print(icoordinate)
+    gc.collect()
+
 #Begin parsing file - Main Loop
 with open(filename, 'r') as f:
     #Initialize bp dictionary and z-score lists
@@ -490,202 +672,205 @@ with open(filename, 'r') as f:
 
     #Iterate through input file, read each rows metrics, sequence, etc.
     print("Reading sequence and structures...")
-    for row in lines:
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        for row, lines in zip(lines, executor.map(read_row, lines)):
+            print("Completed process")
 
-        #Ignore blank lines
-        if not row.strip():
-            continue
-
-        #Main loop to find all i-j pairs per i-nucleotide
-        else:
-            #Assign metrics to variables
-            try:
-                data = row.split('\t')
-
-                icoordinate = data[0]
-                jcoordinate = data[1]
-                # temp = data[2]
-                mfe = float(data[3])
-                zscore = float(data[4])
-                pvalue = data[5]
-                ed = float(data[6])
-                if ("A" or "G" or "C" or "T" or "U") in str(data[8]):
-                    #print("8"+str(data[8]))
-                    fmfe = float(data[7])
-                    sequence_raw = transcribe(str(data[8]))
-                    structure_raw = str(data[9])
-
-                elif ("A" or "G" or "C" or "T" or "U") in str(data[7]):
-                    #print("7")
-                    sequence_raw = transcribe(str(data[7]))
-                    structure_raw = str(data[8])
-
-                strand = 1
-                #print("Tab "+icoordinate)
-            except:
-                print("Exception at "+str(row))
-                data = row.split(',')
-                icoordinate = data[0]
-                jcoordinate = data[1]
-                temp = data[2]
-                mfe = float(data[3])
-                zscore = float(data[4])
-                pvalue = data[5]
-                ed = float(data[6])
-                fmfe = data[7]
-                sequence_raw = transcribe(str(data[8]))
-                structure_raw = str(data[9])
-                try:
-                    strand = int(data[11])
-                except:
-                    strand = 1
-                if strand == -1:
-                    #print(icoordinate)
-                    sequence_forward = sequence_raw
-                    sequence_reverse = sequence_forward[::-1]
-                    structure_forward = structure_raw
-                    #print(structure_forward)
-                    structure_reverse = flip_structure(structure_forward)
-                    #print(structure_reverse)
-                    # print(sequence_raw)
-                    # print(sequence_reverse)
-                    structure_raw = structure_reverse
-                    sequence_raw = sequence_reverse
-                    icoordinate = data[0]
-                    jcoordinate = data[1]
-                if strand == int(1):
-                    icoordinate = data[0]
-                    jcoordinate = data[1]
-
-                #print("Comma "+icoordinate)
-
-            #Convert sequence and structures into lists
-            sequence = list(sequence_raw)
-            structure = list(structure_raw)
-
-            #Define window coordinates as string
-            #window = str(str(icoordinate)+"-"+str(jcoordinate))
-
-            #Determine length of window
-            length = len(sequence)
-
-            #Append window z-score to list (to calculate overall z-score)
-            z_score_list.append(zscore)
-
-            #Iterate through dot bracket structure to determine locations of bps
-            i = 0
-            while i < length:
-                #Unpaired nucleotide
-                if structure[i] == '.':
-                    nucleotide = sequence[i]
-                    coordinate = (i + int(icoordinate))
-                    x = NucPair(nucleotide, coordinate, nucleotide, coordinate,
-                                zscore, mfe, ed)
-                    try:
-                        y = bp_dict[coordinate]
-                        y.append(x)
-                    except:
-                        bp_dict[coordinate] = []
-                        y = bp_dict[coordinate]
-                        y.append(x)
-                    i += 1
-                #Paired nucleotide
-                else:
-                    i += 1
-
-            #Inititate base pair tabulation variables
-            bond_order = []
-            bond_count = 0
-
-            #Iterate through sequence to assign nucleotides to structure type
-            m = 0
-            while  m < length:
-                if structure[m] == '(':
-                    bond_count += 1
-                    bond_order.append(bond_count)
-                    m += 1
-                elif structure[m] == ')':
-                    bond_order.append(bond_count)
-                    bond_count -= 1
-                    m += 1
-                elif structure[m] == '.':
-                    bond_order.append(0)
-                    m += 1
-                else:
-                    print("Error")
-
-            #Initiate base_pair list
-            base_pairs = []
-
-            #Create empty variable named test
-            test = ""
-
-            #Iterate through bond order
-            j = 0
-            while j < len(bond_order):
-                if bond_order[j] != 0:
-                    test = bond_order[j]
-                    base_pairs.append(j+1)
-                    bond_order[j] = 0
-                    j += 1
-                    k = 0
-                    while k < len(bond_order):
-                        if bond_order[k] == test:
-                            base_pairs.append(k+1)
-                            bond_order[k] = 0
-                            k += 1
-                        else:
-                            k += 1
-                else:
-                    j += 1
-
-            #Iterate through "base_pairs" "to define bps
-            l = 0
-            while l < len(base_pairs):
-                lbp = base_pairs[l]
-                rbp = base_pairs[l+1]
-
-                lb = str(sequence[int(lbp)-1])
-                rb = str(sequence[int(rbp)-1])
-
-                lbp_coord = int(int(lbp)+int(icoordinate)-1)
-                rbp_coord = int(int(rbp)+int(icoordinate)-1)
-                x = NucPair(lb, lbp_coord, rb, rbp_coord, zscore, mfe, ed)
-                z = NucPair(rb, rbp_coord, lb, lbp_coord, zscore, mfe, ed)
-
-                #Try to append i-j pair to i-nuc for left i-nuc
-                try:
-                    y = bp_dict[lbp_coord]
-                    y.append(x)
-                #If i-nuc not defined, define it
-                except:
-                    bp_dict[lbp_coord] = []
-                    y = bp_dict[lbp_coord]
-                    y.append(x)
-
-                #Try to append i-j pair to i-nuc for right i-nuc
-                try:
-                    w = bp_dict[rbp_coord]
-                    w.append(z)
-                #If i-nuc not defined, define it
-                except:
-                    bp_dict[rbp_coord] = []
-                    w = bp_dict[rbp_coord]
-                    w.append(z)
-                l += 2
-
-            print(icoordinate)
-            gc.collect()
-
-        #Define OVERALL values of metrics
-        meanz = float(np.mean(z_score_list))
-        sdz = float(np.std(z_score_list))
-        minz = min(z_score_list)
-        maxz = max(z_score_list)
-        stdz = float(np.std(z_score_list))
-
-        one_sig_below = float(meanz-stdz)
-        two_sig_below = float( meanz - ( 2 * stdz) )
+    #for row in lines:
+    #         #Ignore blank lines
+    #         if not row.strip():
+    #             continue
+    #
+    #         #Main loop to find all i-j pairs per i-nucleotide
+    #         else:
+    #             #Assign metrics to variables
+    #             try:
+    #                 data = row.split('\t')
+    #
+    #                 icoordinate = data[0]
+    #                 jcoordinate = data[1]
+    #                 # temp = data[2]
+    #                 mfe = float(data[3])
+    #                 zscore = float(data[4])
+    #                 pvalue = data[5]
+    #                 ed = float(data[6])
+    #                 if ("A" or "G" or "C" or "T" or "U") in str(data[8]):
+    #                     #print("8"+str(data[8]))
+    #                     fmfe = float(data[7])
+    #                     sequence_raw = transcribe(str(data[8]))
+    #                     structure_raw = str(data[9])
+    #
+    #                 elif ("A" or "G" or "C" or "T" or "U") in str(data[7]):
+    #                     #print("7")
+    #                     sequence_raw = transcribe(str(data[7]))
+    #                     structure_raw = str(data[8])
+    #
+    #                 strand = 1
+    #                 #print("Tab "+icoordinate)
+    #             except:
+    #                 print("Exception at "+str(row))
+    #                 data = row.split(',')
+    #                 icoordinate = data[0]
+    #                 jcoordinate = data[1]
+    #                 temp = data[2]
+    #                 mfe = float(data[3])
+    #                 zscore = float(data[4])
+    #                 pvalue = data[5]
+    #                 ed = float(data[6])
+    #                 fmfe = data[7]
+    #                 sequence_raw = transcribe(str(data[8]))
+    #                 structure_raw = str(data[9])
+    #                 try:
+    #                     strand = int(data[11])
+    #                 except:
+    #                     strand = 1
+    #                 if strand == -1:
+    #                     #print(icoordinate)
+    #                     sequence_forward = sequence_raw
+    #                     sequence_reverse = sequence_forward[::-1]
+    #                     structure_forward = structure_raw
+    #                     #print(structure_forward)
+    #                     structure_reverse = flip_structure(structure_forward)
+    #                     #print(structure_reverse)
+    #                     # print(sequence_raw)
+    #                     # print(sequence_reverse)
+    #                     structure_raw = structure_reverse
+    #                     sequence_raw = sequence_reverse
+    #                     icoordinate = data[0]
+    #                     jcoordinate = data[1]
+    #                 if strand == int(1):
+    #                     icoordinate = data[0]
+    #                     jcoordinate = data[1]
+    #
+    #                 #print("Comma "+icoordinate)
+    #
+    #             #Convert sequence and structures into lists
+    #             sequence = list(sequence_raw)
+    #             structure = list(structure_raw)
+    #
+    #             #Define window coordinates as string
+    #             #window = str(str(icoordinate)+"-"+str(jcoordinate))
+    #
+    #             #Determine length of window
+    #             length = len(sequence)
+    #
+    #             #Append window z-score to list (to calculate overall z-score)
+    #             z_score_list.append(zscore)
+    #
+    #             #Iterate through dot bracket structure to determine locations of bps
+    #             i = 0
+    #             while i < length:
+    #                 #Unpaired nucleotide
+    #                 if structure[i] == '.':
+    #                     nucleotide = sequence[i]
+    #                     coordinate = (i + int(icoordinate))
+    #                     x = NucPair(nucleotide, coordinate, nucleotide, coordinate,
+    #                                 zscore, mfe, ed)
+    #                     try:
+    #                         y = bp_dict[coordinate]
+    #                         y.append(x)
+    #                     except:
+    #                         bp_dict[coordinate] = []
+    #                         y = bp_dict[coordinate]
+    #                         y.append(x)
+    #                     i += 1
+    #                 #Paired nucleotide
+    #                 else:
+    #                     i += 1
+    #
+    #             #Inititate base pair tabulation variables
+    #             bond_order = []
+    #             bond_count = 0
+    #
+    #             #Iterate through sequence to assign nucleotides to structure type
+    #             m = 0
+    #             while  m < length:
+    #                 if structure[m] == '(':
+    #                     bond_count += 1
+    #                     bond_order.append(bond_count)
+    #                     m += 1
+    #                 elif structure[m] == ')':
+    #                     bond_order.append(bond_count)
+    #                     bond_count -= 1
+    #                     m += 1
+    #                 elif structure[m] == '.':
+    #                     bond_order.append(0)
+    #                     m += 1
+    #                 else:
+    #                     print("Error")
+    #
+    #             #Initiate base_pair list
+    #             base_pairs = []
+    #
+    #             #Create empty variable named test
+    #             test = ""
+    #
+    #             #Iterate through bond order
+    #             j = 0
+    #             while j < len(bond_order):
+    #                 if bond_order[j] != 0:
+    #                     test = bond_order[j]
+    #                     base_pairs.append(j+1)
+    #                     bond_order[j] = 0
+    #                     j += 1
+    #                     k = 0
+    #                     while k < len(bond_order):
+    #                         if bond_order[k] == test:
+    #                             base_pairs.append(k+1)
+    #                             bond_order[k] = 0
+    #                             k += 1
+    #                         else:
+    #                             k += 1
+    #                 else:
+    #                     j += 1
+    #
+    #             #Iterate through "base_pairs" "to define bps
+    #             l = 0
+    #             while l < len(base_pairs):
+    #                 lbp = base_pairs[l]
+    #                 rbp = base_pairs[l+1]
+    #
+    #                 lb = str(sequence[int(lbp)-1])
+    #                 rb = str(sequence[int(rbp)-1])
+    #
+    #                 lbp_coord = int(int(lbp)+int(icoordinate)-1)
+    #                 rbp_coord = int(int(rbp)+int(icoordinate)-1)
+    #                 x = NucPair(lb, lbp_coord, rb, rbp_coord, zscore, mfe, ed)
+    #                 z = NucPair(rb, rbp_coord, lb, lbp_coord, zscore, mfe, ed)
+    #
+    #                 #Try to append i-j pair to i-nuc for left i-nuc
+    #                 try:
+    #                     y = bp_dict[lbp_coord]
+    #                     y.append(x)
+    #                 #If i-nuc not defined, define it
+    #                 except:
+    #                     bp_dict[lbp_coord] = []
+    #                     y = bp_dict[lbp_coord]
+    #                     y.append(x)
+    #
+    #                 #Try to append i-j pair to i-nuc for right i-nuc
+    #                 try:
+    #                     w = bp_dict[rbp_coord]
+    #                     w.append(z)
+    #                 #If i-nuc not defined, define it
+    #                 except:
+    #                     bp_dict[rbp_coord] = []
+    #                     w = bp_dict[rbp_coord]
+    #                     w.append(z)
+    #                 l += 2
+    #
+    #             #print(icoordinate)
+    #             gc.collect()
+    #
+    #     #Define OVERALL values of metrics
+    # meanz = float(np.mean(z_score_list))
+    # sdz = float(np.std(z_score_list))
+    # minz = min(z_score_list)
+    # maxz = max(z_score_list)
+    # stdz = float(np.std(z_score_list))
+    #
+    # one_sig_below = float(meanz-stdz)
+    # two_sig_below = float( meanz - ( 2 * stdz) )
 
 #Initiate global dictionaries to store best base pairs
 best_bps = {}
