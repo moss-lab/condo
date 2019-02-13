@@ -674,6 +674,8 @@ with open(filename, 'r') as f:
     print("Reading sequence and structures...")
     with concurrent.futures.ProcessPoolExecutor() as executor:
         for row, lines in zip(lines, executor.map(read_row, lines)):
+            data = row.split('\t')
+            icoordinate = data[0]
             print("Completed process for "+str(icoordinate)+" of "+str(len(nuc_dict)))
 
     #for row in lines:
