@@ -75,6 +75,9 @@ if strand == "reverse":
 log_total = open(str(filename)+".ScanFold.log.txt", 'w')
 log_win = open(str(filename)+".ScanFold.final_partners.txt", 'w')
 
+bp_dict = {}
+z_score_list = []
+
 class NucPair:
     #Class to define a base pair
     def __init__(self, inucleotide, icoordinate, jnucleotide, jcoordinate, zscore, mfe, ed):
@@ -405,31 +408,31 @@ def write_bp(base_pair_dictionary, filename, name):
         #choose color
         if float(v.zscore) < float(-2):
             score = str(0)
-            print(k, v.zscore, score)
+            # print(k, v.zscore, score)
 
         elif (float(v.zscore) < int(-1)) and (float(v.zscore) >= -2):
             score = str(1)
-            print(k, v.zscore, score)
+            # print(k, v.zscore, score)
 
         elif (float(v.zscore) < int(0)) and (float(v.zscore) >= -1):
             score = str(2)
-            print(k, v.zscore, score)
+            # print(k, v.zscore, score)
 
         elif float(v.zscore) == 0 :
             score = str(3)
-            print(k, v.zscore, score)
+            # print(k, v.zscore, score)
 
         elif 0 < float(v.zscore) <= 1:
             score = str(4)
-            print(k, v.zscore, score)
+            # print(k, v.zscore, score)
 
         elif 1 < float(v.zscore) <= 2:
             score = str(5)
-            print(k, v.zscore, score)
+            # print(k, v.zscore, score)
 
         elif float(v.zscore) > 2:
             score = str(6)
-            print(k, v.zscore, score)
+            # print(k, v.zscore, score)
 
         else:
             print(k, v.zscore, score)
@@ -469,9 +472,11 @@ def flip_structure(structure):
     return ''.join([flip[pair] for pair in structure[::-1]])
 
 def read_row(row):
-
     #Main loop to find all i-j pairs per i-nucleotide
     #Assign metrics to variables
+    global bp_dict
+    global z_score_list
+
     try:
         data = row.split('\t')
 
@@ -648,20 +653,17 @@ def read_row(row):
         l += 2
 
     #print(icoordinate)
-    gc.collect()
+    results = [bp_dict, z_score_list]
+    return results
 
 #Begin parsing file - Main Loop
 with open(filename, 'r') as f:
     #Initialize bp dictionary and z-score lists
-    z_score_list = []
-    bp_dict = {}
-
     #Read all lines from ScanFold-Scan file (exept header)
     lines = f.readlines()[1:]
 
     #Generate nucleotide dictionary to assign each nucleotide in sequence a key
     nuc_dict = NucleotideDictionary(lines)
-    gc.collect()
     print("Sequence length: "+str(len(nuc_dict))+"nt")
 
     #Determine start and end coordinate values
@@ -673,11 +675,24 @@ with open(filename, 'r') as f:
     #Iterate through input file, read each rows metrics, sequence, etc.
     print("Reading sequence and structures...")
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        for row, lines in zip(lines, executor.map(read_row, lines)):
+        #results[0] = bp_dict and results[1] = z_score_list
+        for row, results in zip(lines, executor.map(read_row, lines)):
+            bp_dict.update(results[0])
+            z_score_list = results[1]
             data = row.split('\t')
+            length = len(str(data[7]))
             icoordinate = data[0]
             print("Completed process for "+str(icoordinate)+" of "+str(len(nuc_dict)))
 
+    meanz = float(np.mean(z_score_list))
+    sdz = float(np.std(z_score_list))
+    minz = min(z_score_list)
+    maxz = max(z_score_list)
+    stdz = float(np.std(z_score_list))
+    one_sig_below = float(meanz-stdz)
+    two_sig_below = float( meanz - ( 2 * stdz) )
+
+    #print(len(z_score_list))
     #for row in lines:
     #         #Ignore blank lines
     #         if not row.strip():
@@ -1258,3 +1273,4 @@ if competition == 1:
     # os.system(str("ct2dot "+output+"2sd_below_mean_"+str(round(two_sig_below, 2))+".ct 1 "+output+"2sd_below_mean_"+str(round(two_sig_below, 2))+".dbn"))
     write_bp(final_partners, filename+".IGVoutput.bp", name)
     write_wig_dict(final_partners, filename+".IGVoutput.wig", name)
+    print("Elapsed time: "+elapsed_time)
