@@ -45,6 +45,7 @@ from itertools import repeat
 from functools import partial
 import concurrent.futures
 import gc
+import pickle
 
 start_time = time.time()
 
@@ -886,6 +887,11 @@ with open(filename, 'r') as f:
                 #gc.collect()
 
         #Define OVERALL values of metrics
+
+    # pickle_out = open(filename+".bp_dict.pickle" , "wb")
+    # pickle.dump(bp_dict, pickle_out)
+    # pickle_out.close()
+
     meanz = float(np.mean(z_score_list))
     sdz = float(np.std(z_score_list))
     minz = min(z_score_list)
@@ -905,6 +911,10 @@ best_total_window_mean_bps = {}
 elapsed_time = round((time.time() - start_time), 2)
 print("Elapsed time: "+str(elapsed_time)+"s")
 print("Determining best base pairs...")
+
+# pickle_in = open(filename+".bp_dict.pickle", "rb")
+
+# bp_dict = pickle.load(pickle_in)
 for k, v in sorted(bp_dict.items()):
     #Initiate local dictionaries to store metrics per nucleotide
     zscore_dict = {}
