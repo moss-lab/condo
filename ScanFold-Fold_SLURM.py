@@ -499,10 +499,11 @@ def read_row(row):
             #print("8"+str(data[8]))
             fmfe = float(data[7])
             sequence_raw = transcribe(str(data[8]))
+            structure_raw = str(data[9])
             if strand == int(-1):
                 sequence_raw = flip_sequence(sequence_raw)
                 structure_raw = flip_structure(structure_raw)
-            structure_raw = str(data[9])
+
 
         elif ("A" or "G" or "C" or "T" or "U") in str(data[7]):
             #print("7")
