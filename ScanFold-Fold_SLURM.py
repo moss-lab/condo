@@ -735,13 +735,18 @@ with open(filename, 'r') as f:
                         fmfe = float(data[7])
                         sequence_raw = transcribe(str(data[8]))
                         structure_raw = str(data[9])
+                        if strand == int(-1):
+                            sequence_raw = flip_sequence(sequence_raw)
+                            structure_raw = flip_structure(structure_raw)
 
                     elif ("A" or "G" or "C" or "T" or "U") in str(data[7]):
                         #print("7")
                         sequence_raw = transcribe(str(data[7]))
                         structure_raw = str(data[8])
+                        if strand == int(-1):
+                            sequence_raw = flip_sequence(sequence_raw)
+                            structure_raw = flip_structure(structure_raw)
 
-                    strand = 1
                     #print("Tab "+icoordinate)
                 except:
                     print("Exception at "+str(row))
