@@ -472,6 +472,11 @@ def flip_structure(structure):
     flip = {'(':')', ')':'(', '.':'.'}
     return ''.join([flip[pair] for pair in structure[::-1]])
 
+def flip_sequence(sequence):
+    #Function to reverse structure in a given window, for negative strand genes
+    flip = sequence[::-1]
+    return ''.join([flip[pair] for pair in structure[::-1]])
+
 def read_row(row):
     #Main loop to find all i-j pairs per i-nucleotide
     #Assign metrics to variables
@@ -492,14 +497,18 @@ def read_row(row):
             #print("8"+str(data[8]))
             fmfe = float(data[7])
             sequence_raw = transcribe(str(data[8]))
+            if strand == "-1":
+                sequence_raw.flip_sequence()
+                structure_raw.flip_structure()
             structure_raw = str(data[9])
 
         elif ("A" or "G" or "C" or "T" or "U") in str(data[7]):
             #print("7")
             sequence_raw = transcribe(str(data[7]))
             structure_raw = str(data[8])
-
-        strand = 1
+            if strand == "-1":
+                sequence_raw.flip_sequence()
+                structure_raw.flip_structure()
         #print("Tab "+icoordinate)
     except:
         print("Exception at "+str(row))
