@@ -70,8 +70,10 @@ name = str(args.name)
 
 if strand == "forward":
     strand = int(1)
-if strand == "reverse":
+elif strand == "reverse":
     strand = int(-1)
+else:
+    print("No strand definied")
 
 log_total = open(str(filename)+".ScanFold.log.txt", 'w')
 log_win = open(str(filename)+".ScanFold.final_partners.txt", 'w')
@@ -497,18 +499,18 @@ def read_row(row):
             #print("8"+str(data[8]))
             fmfe = float(data[7])
             sequence_raw = transcribe(str(data[8]))
-            if strand == "-1":
-                sequence_raw.flip_sequence()
-                structure_raw.flip_structure()
+            if strand == int(-1):
+                sequence_raw = flip_sequence(sequence_raw)
+                structure_raw = flip_structure(structure_raw)
             structure_raw = str(data[9])
 
         elif ("A" or "G" or "C" or "T" or "U") in str(data[7]):
             #print("7")
             sequence_raw = transcribe(str(data[7]))
             structure_raw = str(data[8])
-            if strand == "-1":
-                sequence_raw.flip_sequence()
-                structure_raw.flip_structure()
+            if strand == int(-1):
+                sequence_raw = flip_sequence(sequence_raw)
+                structure_raw = flip_structure(structure_raw)
         #print("Tab "+icoordinate)
     except:
         print("Exception at "+str(row))
