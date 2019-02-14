@@ -116,16 +116,22 @@ def NucleotideDictionary (lines):
         if not row.strip():
             continue
         else:
-            i = 1
             try:
+                i = 1
                 data = row.split('\t')
                 icoordinate = data[0]
                 if ("A" or "G" or "C" or "T" or "U") in str(data[8]):
                     #print("8"+str(data[8]))
                     sequence = transcribe(str(data[8]))
+                    if strand == int(-1):
+                        sequence = flip_sequence(str(data[8]))
+
                 elif ("A" or "G" or "C" or "T" or "U") in str(data[7]):
                     #print("7")
                     sequence = transcribe(str(data[7]))
+                    if strand == int(-1):
+                        sequence = flip_sequence(str(data[7]))
+
                 else:
                     print("Exception at "+str(row))
 
@@ -157,6 +163,7 @@ def NucleotideDictionary (lines):
                 x = NucZscore(nuc,(int(icoordinate)+int(i)-1))
                 nuc_dict[x.coordinate] = x
                 i += 1
+
     print(icoordinate)
     return nuc_dict;
 
