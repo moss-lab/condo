@@ -477,7 +477,7 @@ def flip_structure(structure):
 def flip_sequence(sequence):
     #Function to reverse structure in a given window, for negative strand genes
     flip = sequence[::-1]
-    return ''.join([flip[pair] for pair in structure[::-1]])
+    return str(flip)
 
 def read_row(row):
     #Main loop to find all i-j pairs per i-nucleotide
