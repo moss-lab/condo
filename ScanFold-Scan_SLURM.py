@@ -307,12 +307,14 @@ with open(myfasta, 'r') as forward_fasta:
             length = len(cur_record.seq)
             seq = cur_record.seq
             #print(length)
-            #w.write("i\tj\tTemperature\tNative_dG\tZ-score\tP-score\tEnsembleDiversity\tSequence\tStructure\tCentroid\t"+read_name+"\n")
             i = 0
 
 
     ##### Main routine using defined functions: ##########################################
             i = 0
+            #write the header line:
+            w.write("i\tj\tTemperature\tNative_dG\tZ-score\tP-score\tEnsembleDiversity\tSequence\tStructure\tCentroid\t"+read_name+"\n")
+
             while i == 0 or i <= (length - window_size):
                 start_nucleotide = i + 1 # This will just define the start nucleotide coordinate value
                 raw_frag = seq[i:i+int(window_size)] # This breaks up sequence into fragments
